@@ -1,0 +1,95 @@
+═══════════════════════════════════════════════════════════════
+  CUM SĂ ACCESEZI APLICAȚIA AAC COMMUNICATION SYSTEM
+═══════════════════════════════════════════════════════════════
+
+OPȚIUNEA 1: Folosind scripturile automate (RECOMANDAT)
+═══════════════════════════════════════════════════════════════
+
+1. DUBLĂ CLICK pe: start_backend.bat
+   → Se va deschide o fereastră de terminal
+   → Backend-ul va porni automat
+   → Lăsă această fereastră DESCHISĂ
+
+2. DUBLĂ CLICK pe: start_frontend.bat
+   → Se va deschide o altă fereastră de terminal
+   → Aplicația Flutter se va deschide automat în Chrome
+   → Lăsă și această fereastră DESCHISĂ
+
+3. Aplicația este acum accesibilă în browser!
+
+
+OPȚIUNEA 2: Manual (dacă scripturile nu funcționează)
+═══════════════════════════════════════════════════════════════
+
+PASUL 1: Pornește Backend-ul
+───────────────────────────────────────────────────────────────
+1. Deschide PowerShell în folderul proiectului
+2. Rulează:
+   cd backend
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   python init_db.py
+   python main.py
+
+3. Backend-ul rulează pe: http://localhost:8000
+   → Lăsă terminalul DESCHIS
+
+
+PASUL 2: Pornește Frontend-ul
+───────────────────────────────────────────────────────────────
+1. Deschide un NOU terminal PowerShell
+2. Rulează:
+   cd frontend
+   cd frontend
+   flutter pub get
+   flutter run -d chrome
+
+3. Aplicația se va deschide automat în Chrome
+
+
+VERIFICARE
+═══════════════════════════════════════════════════════════════
+
+✓ Backend funcționează dacă accesezi:
+  http://localhost:8000
+  (ar trebui să vezi un mesaj JSON)
+
+✓ Backend API Documentation:
+  http://localhost:8000/docs
+  (interfață Swagger interactivă)
+
+✓ Frontend funcționează dacă:
+  Aplicația se deschide în Chrome automat
+  Sau accesează URL-ul afișat în terminal
+
+
+IMPORTANT
+═══════════════════════════════════════════════════════════════
+
+⚠️  AMBELE servere trebuie să ruleze simultan!
+   - Backend (Python) - portul 8000
+   - Frontend (Flutter) - se conectează la backend
+
+⚠️  Nu închide ferestrele de terminal cât timp folosești aplicația!
+
+
+PROBLEME COMUNE
+═══════════════════════════════════════════════════════════════
+
+❌ "Port 8000 already in use"
+   → Închide alte aplicații care folosesc portul 8000
+   → Sau schimbă portul în backend/main.py
+
+❌ "Flutter not found"
+   → Instalează Flutter: https://flutter.dev/docs/get-started/install
+
+❌ "Module not found" (Python)
+   → Rulează: pip install -r requirements.txt
+
+❌ "Database error"
+   → Rulează: python backend/init_db.py
+
+═══════════════════════════════════════════════════════════════
+
+

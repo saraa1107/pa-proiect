@@ -1,0 +1,135 @@
+LISTA IMAGINI NECESARE PENTRU SIMBOLURI
+========================================
+
+Toate imaginile trebuie să fie plasate în folderul: backend/data/images/
+
+ACȚIUNI:
+--------
+- mananc.jpg
+- beau.jpg
+- dorm.jpg
+- joc.jpg
+- merg.jpg
+- alerg.jpg
+- citesc.jpg
+- scriu.jpg
+- desenez.jpg
+- ascult.jpg
+- vad.jpg
+- spal.jpg
+- imbrac.jpg
+- plimb.jpg
+- dansez.jpg
+
+ALIMENTE:
+---------
+- paine.jpg
+- apa.jpg
+- lapte.jpg
+- fructe.jpg
+- mar.jpg
+- banane.jpg
+- portocale.jpg
+- struguri.jpg
+- legume.jpg
+- morcovi.jpg
+- rosii.jpg
+- cartofi.jpg
+- oua.jpg
+- branza.jpg
+- iaurt.jpg
+- carne.jpg
+- pui.jpg
+- paste.jpg
+- orez.jpg
+- suc.jpg
+- ciocolata.jpg
+- biscuiti.jpg
+- tort.jpg
+
+EMOȚII:
+-------
+- fericit.jpg
+- trist.jpg
+- suparat.jpg
+- infricat.jpg
+- surprins.jpg
+- obosit.jpg
+- insetat.jpg
+- foame.jpg
+- mandru.jpg
+- iubit.jpg
+
+PERSOANE:
+---------
+- mama.jpg
+- tata.jpg
+- prieten.jpg
+- bunica.jpg
+- bunic.jpg
+- frate.jpg
+- sora.jpg
+- copil.jpg
+- bebelus.jpg
+- profesor.jpg
+- doctor.jpg
+- asistent.jpg
+
+LOCAȚII:
+--------
+- casa.jpg
+- scoala.jpg
+- gradina.jpg
+- parc.jpg
+- spital.jpg
+- magazin.jpg
+- bucatarie.jpg
+- dormitor.jpg
+- baie.jpg
+- sufragerie.jpg
+- curte.jpg
+- plaja.jpg
+- padure.jpg
+- munte.jpg
+- lac.jpg
+
+OBIECTE:
+--------
+- masuta.jpg
+- scaun.jpg
+- pat.jpg
+- jucarie.jpg
+- minge.jpg
+- carti.jpg
+- caiet.jpg
+- creion.jpg
+- pix.jpg
+- culori.jpg
+- telefon.jpg
+- tableta.jpg
+- televizor.jpg
+- lampa.jpg
+- ceas.jpg
+- haina.jpg
+- pantofi.jpg
+- sapca.jpg
+- camasa.jpg
+- pantaloni.jpg
+- rochie.jpg
+- tricou.jpg
+- farfurie.jpg
+- tacamuri.jpg
+- cana.jpg
+- pahar.jpg
+- masina.jpg
+- bicicleta.jpg
+- trotineta.jpg
+
+TOTAL: 103 imagini necesare
+
+NOTĂ: 
+- Imaginile trebuie să fie în format JPG sau PNG
+- Dimensiunea recomandată: minim 200x200 pixeli
+- Poți folosi imagini simple și clare pentru fiecare cuvânt
+- După ce adaugi imaginile, rulează din nou: python init_db.py (dacă vrei să resetezi baza de date)
+

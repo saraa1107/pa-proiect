@@ -1,0 +1,68 @@
+═══════════════════════════════════════════════════════════════
+  SOLUȚIE PENTRU PROBLEMA DE INSTALARE
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA: pydantic-core necesită Rust pentru compilare
+
+SOLUȚIA 1: Instalare manuală (RECOMANDAT)
+═══════════════════════════════════════════════════════════════
+
+1. Deschide PowerShell în folderul backend:
+   cd backend
+
+2. Creează/Activează mediu virtual:
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+
+3. Actualizează pip:
+   python -m pip install --upgrade pip
+
+4. Instalează dependențele UNA CÂTE UNA (pentru a vedea care e problema):
+   pip install fastapi
+   pip install "uvicorn[standard]"
+   pip install sqlalchemy
+   pip install pydantic
+   pip install python-multipart
+   pip install "python-jose[cryptography]"
+   pip install "passlib[bcrypt]"
+   pip install pyttsx3
+   pip install gTTS
+
+5. Dacă pydantic dă eroare, încearcă versiunea mai nouă:
+   pip install --upgrade pydantic
+
+6. Inițializează baza de date:
+   python init_db.py
+
+7. Pornește serverul:
+   python main.py
+
+
+SOLUȚIA 2: Folosește versiuni mai noi (ALTERNATIVĂ)
+═══════════════════════════════════════════════════════════════
+
+Am actualizat requirements.txt cu versiuni mai noi care ar trebui
+să aibă wheel-uri pre-compilate. Rulează din nou start_backend.bat
+
+
+SOLUȚIA 3: Instalează Rust (DACĂ EȘUEAZĂ TOATE)
+═══════════════════════════════════════════════════════════════
+
+Dacă nimic nu funcționează, instalează Rust:
+1. Descarcă de la: https://rustup.rs/
+2. Instalează Rust
+3. Repornește terminalul
+4. Rulează din nou: pip install -r requirements.txt
+
+
+VERIFICARE
+═══════════════════════════════════════════════════════════════
+
+După instalare, verifică:
+python -c "import fastapi; print('FastAPI OK')"
+python -c "import sqlalchemy; print('SQLAlchemy OK')"
+python -c "import pydantic; print('Pydantic OK')"
+
+═══════════════════════════════════════════════════════════════
+
+
