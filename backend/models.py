@@ -30,6 +30,8 @@ class Child(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     therapist = relationship("User", back_populates="children")
+    categories = relationship("Category", back_populates="child", cascade="all, delete-orphan")
+    symbols = relationship("Symbol", back_populates="child", cascade="all, delete-orphan")
     favorite_symbols = relationship("FavoriteSymbol", back_populates="child", cascade="all, delete-orphan")
 
 
@@ -44,11 +46,11 @@ class Category(Base):
     description = Column(Text, nullable=True)
     icon = Column(String(255), nullable=True)  # URL sau path către iconiță
     color = Column(String(7), nullable=True)  # Hex color code
-    child_id = Column(Integer, ForeignKey("children.id"), nullable=True)  # null = global
+    child_id = Column(Integer, ForeignKey("children.id", ondelete="CASCADE"), nullable=True)  # null = global
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relații
-    child = relationship("Child", backref="categories")
+    child = relationship("Child", back_populates="categories")
     symbols = relationship("Symbol", back_populates="category", cascade="all, delete-orphan")
 
 
@@ -63,14 +65,14 @@ class Symbol(Base):
     text = Column(String(255), nullable=False)  # Textul care va fi vorbit
     image_url = Column(String(500), nullable=False)  # URL sau path către imagine
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    child_id = Column(Integer, ForeignKey("children.id"), nullable=True)  # null = global
+    child_id = Column(Integer, ForeignKey("children.id", ondelete="CASCADE"), nullable=True)  # null = global
     display_order = Column(Integer, default=0)  # Pentru reordonare în mod terapeut
     usage_count = Column(Integer, default=0)  # Contor pentru utilizări
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relații
     category = relationship("Category", back_populates="symbols")
-    child = relationship("Child", backref="symbols")
+    child = relationship("Child", back_populates="symbols")
     favorites = relationship("FavoriteSymbol", back_populates="symbol")
 
 
