@@ -1,28 +1,21 @@
-LISTA IMAGINI NECESARE PENTRU SIMBOLURI
-========================================
+LISTA IMAGINI NECESARE PENTRU SIMBOLURI (50 TOTAL)
+===================================================
 
 Toate imaginile trebuie să fie plasate în folderul: backend/data/images/
 
-ACȚIUNI:
---------
+ACȚIUNI (8 imagini):
+-------------------
 - mananc.jpg
 - beau.jpg
 - dorm.jpg
 - joc.jpg
 - merg.jpg
-- alerg.jpg
 - citesc.jpg
-- scriu.jpg
-- desenez.jpg
-- ascult.jpg
-- vad.jpg
 - spal.jpg
 - imbrac.jpg
-- plimb.jpg
-- dansez.jpg
 
-ALIMENTE:
----------
+ALIMENTE (12 imagini):
+---------------------
 - paine.jpg
 - apa.jpg
 - lapte.jpg
@@ -30,102 +23,55 @@ ALIMENTE:
 - mar.jpg
 - banane.jpg
 - portocale.jpg
-- struguri.jpg
 - legume.jpg
-- morcovi.jpg
-- rosii.jpg
-- cartofi.jpg
 - oua.jpg
 - branza.jpg
-- iaurt.jpg
-- carne.jpg
-- pui.jpg
-- paste.jpg
-- orez.jpg
 - suc.jpg
 - ciocolata.jpg
-- biscuiti.jpg
-- tort.jpg
 
-EMOȚII:
--------
+EMOȚII (5 imagini):
+------------------
 - fericit.jpg
 - trist.jpg
 - suparat.jpg
 - infricat.jpg
-- surprins.jpg
 - obosit.jpg
-- insetat.jpg
-- foame.jpg
-- mandru.jpg
-- iubit.jpg
 
-PERSOANE:
----------
+PERSOANE (6 imagini):
+--------------------
 - mama.jpg
 - tata.jpg
 - prieten.jpg
 - bunica.jpg
-- bunic.jpg
 - frate.jpg
-- sora.jpg
-- copil.jpg
-- bebelus.jpg
 - profesor.jpg
-- doctor.jpg
-- asistent.jpg
 
-LOCAȚII:
---------
+LOCAȚII (9 imagini):
+-------------------
 - casa.jpg
 - scoala.jpg
-- gradina.jpg
 - parc.jpg
-- spital.jpg
 - magazin.jpg
+- spital.jpg
 - bucatarie.jpg
 - dormitor.jpg
 - baie.jpg
-- sufragerie.jpg
 - curte.jpg
-- plaja.jpg
-- padure.jpg
-- munte.jpg
-- lac.jpg
 
-OBIECTE:
---------
-- masuta.jpg
+OBIECTE (10 imagini):
+--------------------
 - scaun.jpg
 - pat.jpg
 - jucarie.jpg
 - minge.jpg
 - carti.jpg
-- caiet.jpg
 - creion.jpg
-- pix.jpg
-- culori.jpg
 - telefon.jpg
-- tableta.jpg
-- televizor.jpg
-- lampa.jpg
-- ceas.jpg
 - haina.jpg
 - pantofi.jpg
-- sapca.jpg
-- camasa.jpg
-- pantaloni.jpg
-- rochie.jpg
-- tricou.jpg
-- farfurie.jpg
-- tacamuri.jpg
-- cana.jpg
-- pahar.jpg
 - masina.jpg
-- bicicleta.jpg
-- trotineta.jpg
 
-TOTAL: 103 imagini necesare
+TOTAL: 50 imagini necesare
 
 NOTĂ: 
 - Imaginile trebuie să fie în format JPG sau PNG

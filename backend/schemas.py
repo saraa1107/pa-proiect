@@ -66,6 +66,25 @@ class UserResponse(UserBase):
         from_attributes = True
 
 
+# ============ SCHEMAS PENTRU COPII ============
+
+class ChildBase(BaseModel):
+    name: str
+
+
+class ChildCreate(ChildBase):
+    pass
+
+
+class ChildResponse(ChildBase):
+    id: int
+    therapist_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # ============ SCHEMAS PENTRU TTS ============
 
 class TTSRequest(BaseModel):
@@ -79,3 +98,10 @@ class AddImageRequest(BaseModel):
     image_url: str
     symbol_id: int  # ID-ul simbolului existent (obligatoriu)
     image_name: Optional[str] = None  # Nume opțional pentru fișierul imaginii
+
+
+# ============ SCHEMAS PENTRU REORDONARE SIMBOLURI ============
+
+class SymbolReorderItem(BaseModel):
+    symbol_id: int
+    new_order: int

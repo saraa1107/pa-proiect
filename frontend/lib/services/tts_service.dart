@@ -62,6 +62,13 @@ class TTSService {
       _currentAudio!.pause();
     }
   }
+
+  /// Redă o secvență de texte concatenate
+  Future<void> speakSequence(List<String> texts) async {
+    if (texts.isEmpty) return;
+    final combinedText = texts.join(' ');
+    await speak(combinedText);
+  }
 }
 
 

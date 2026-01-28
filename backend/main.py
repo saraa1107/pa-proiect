@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -8,9 +8,11 @@ import os
 import shutil
 
 from database import SessionLocal, engine, Base
-from models import Category, Symbol, User
-from schemas import CategoryCreate, CategoryResponse, SymbolCreate, SymbolResponse, UserCreate, UserResponse, TTSRequest, AddImageRequest
-from services import CategoryService, SymbolService, UserService, TTSService
+from models import Category, Symbol, User, Child
+from schemas import (CategoryCreate, CategoryResponse, SymbolCreate, SymbolResponse, 
+                     UserCreate, UserResponse, TTSRequest, AddImageRequest, 
+                     ChildCreate, ChildResponse)
+from services import CategoryService, SymbolService, UserService, TTSService, ChildService
 
 # Creează tabelele în baza de date
 Base.metadata.create_all(bind=engine)
@@ -35,6 +37,373 @@ def get_db():
         db.close()
 
 
+# Dependency pentru autentificare
+def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)) -> User:
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Token de autentificare lipsă")
+    
+    token = authorization.replace('Bearer ', '')
+    user = UserService.verify_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Token invalid sau expirat")
+    
+    # Verifică dacă utilizatorul există în baza de date
+    db_user = UserService.get_by_email(db, user['email'])
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Utilizator inexistent")
+    
+    return db_user
+
+
+# ============ ENDPOINTS PENTRU AUTENTIFICARE ============
+
+@app.post("/api/auth/register")
+def register(user_data: dict, db: Session = Depends(get_db)):
+    """Înregistrează un nou terapeut"""
+    try:
+        name = user_data.get('name')
+        email = user_data.get('email')
+        password = user_data.get('password')
+        
+        if not name or not email or not password:
+            raise HTTPException(status_code=400, detail="Toate câmpurile sunt obligatorii")
+        
+        # Verifică dacă email-ul există deja
+        existing_user = UserService.get_by_email(db, email)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email-ul este deja folosit")
+        
+        # Creează utilizatorul cu parolă
+        user = UserService.create_with_password(db, name, email, password)
+        
+        # Generează token
+        token = UserService.create_access_token(email)
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "created_at": user.created_at.isoformat()
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Eroare la înregistrare: {str(e)}")
+
+
+@app.post("/api/auth/login")
+def login(credentials: dict, db: Session = Depends(get_db)):
+    """Autentifică un terapeut"""
+    try:
+        email = credentials.get('email')
+        password = credentials.get('password')
+        
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email și parola sunt obligatorii")
+        
+        # Verifică credențialele
+        user = UserService.authenticate(db, email, password)
+        if not user:
+            raise HTTPException(status_code=401, detail="Email sau parolă greșită")
+        
+        # Generează token
+        token = UserService.create_access_token(email)
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "created_at": user.created_at.isoformat()
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Eroare la autentificare: {str(e)}")
+
+
+# ============ ENDPOINTS PENTRU COPII (Children) ============
+
+@app.get("/api/children", response_model=List[ChildResponse])
+def get_children(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Obține toți copiii terapeutului autentificat"""
+    return ChildService.get_all_for_therapist(db, current_user.id)
+
+
+@app.post("/api/children", response_model=ChildResponse)
+def create_child(child_data: dict, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Creează un nou profil de copil"""
+    name = child_data.get('name')
+    if not name:
+        raise HTTPException(status_code=400, detail="Numele copilului este obligatoriu")
+    
+    child_create = ChildCreate(name=name)
+    return ChildService.create(db, current_user.id, child_create)
+
+
+@app.delete("/api/children/{child_id}")
+def delete_child(
+    child_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Șterge un copil și toate datele asociate"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    db.delete(child)
+    db.commit()
+    return {"success": True}
+
+
+@app.get("/api/children/{child_id}/categories", response_model=List[CategoryResponse])
+def get_child_categories(
+    child_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obține categoriile pentru un copil specific"""
+    # Verifică dacă copilul aparține terapeutului
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    return CategoryService.get_all_for_child(db, child_id)
+
+
+@app.get("/api/children/{child_id}/symbols", response_model=List[SymbolResponse])
+def get_child_symbols(
+    child_id: int,
+    category_id: Optional[int] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obține simbolurile pentru un copil specific"""
+    # Verifică dacă copilul aparține terapeutului
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    return SymbolService.get_for_child(db, child_id, category_id)
+
+
+@app.get("/api/children/{child_id}/favorites", response_model=List[SymbolResponse])
+def get_child_favorites(
+    child_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obține simbolurile favorite ale unui copil"""
+    # Verifică dacă copilul aparține terapeutului
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    return SymbolService.get_favorites_for_child(db, child_id)
+
+
+@app.post("/api/children/{child_id}/favorites/{symbol_id}")
+def add_child_favorite(
+    child_id: int,
+    symbol_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Adaugă un simbol la favoritele unui copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    ChildService.add_favorite(db, child_id, symbol_id)
+    return {"success": True}
+
+
+@app.delete("/api/children/{child_id}/favorites/{symbol_id}")
+def remove_child_favorite(
+    child_id: int,
+    symbol_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Șterge un simbol din favoritele unui copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    ChildService.remove_favorite(db, child_id, symbol_id)
+    return {"success": True}
+
+
+@app.post("/api/children/{child_id}/categories", response_model=CategoryResponse)
+def create_child_category(
+    child_id: int,
+    category_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Creează o nouă categorie pentru un copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    name = category_data.get('name')
+    if not name:
+        raise HTTPException(status_code=400, detail="Numele categoriei este obligatoriu")
+    
+    category = Category(name=name, child_id=child_id)
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+@app.delete("/api/children/{child_id}/categories/{category_id}")
+def delete_child_category(
+    child_id: int,
+    category_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Șterge o categorie a unui copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    category = db.query(Category).filter(
+        Category.id == category_id,
+        Category.child_id == child_id
+    ).first()
+    
+    if not category:
+        raise HTTPException(status_code=404, detail="Categoria nu a fost găsită")
+    
+    db.delete(category)
+    db.commit()
+    return {"success": True}
+
+
+@app.post("/api/children/{child_id}/symbols", response_model=SymbolResponse)
+def create_child_symbol(
+    child_id: int,
+    symbol_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Creează un nou simbol pentru un copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    name = symbol_data.get('name')
+    text = symbol_data.get('text')
+    image_url = symbol_data.get('image_url')
+    category_id = symbol_data.get('category_id')
+    
+    if not all([name, text, image_url, category_id]):
+        raise HTTPException(status_code=400, detail="Toate câmpurile sunt obligatorii")
+    
+    symbol = Symbol(
+        name=name,
+        text=text,
+        image_url=image_url,
+        category_id=category_id,
+        child_id=child_id
+    )
+    db.add(symbol)
+    db.commit()
+    db.refresh(symbol)
+    return symbol
+
+
+@app.post("/api/children/{child_id}/symbols/upload", response_model=SymbolResponse)
+async def create_child_symbol_with_upload(
+    child_id: int,
+    name: str = Form(...),
+    text: str = Form(...),
+    category_id: int = Form(...),
+    image: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Creează un nou simbol pentru un copil cu imagine încărcată"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    # Salvează imaginea încărcată
+    try:
+        image_url = SymbolService.save_uploaded_file(image, custom_name=name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Eroare la salvarea imaginii: {str(e)}")
+    
+    # Creează simbolul
+    symbol = Symbol(
+        name=name,
+        text=text,
+        image_url=image_url,
+        category_id=category_id,
+        child_id=child_id
+    )
+    db.add(symbol)
+    db.commit()
+    db.refresh(symbol)
+    return symbol
+
+
+@app.delete("/api/children/{child_id}/symbols/{symbol_id}")
+def delete_child_symbol(
+    child_id: int,
+    symbol_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Șterge un simbol al unui copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    success = SymbolService.delete_for_child(db, child_id, symbol_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Simbolul nu a fost găsit")
+    
+    return {"success": True}
+
+
+@app.post("/api/children/{child_id}/symbols/reorder")
+def reorder_child_symbols(
+    child_id: int,
+    items: List[dict],
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Reordonează simbolurile unui copil"""
+    child = ChildService.get_by_id(db, child_id)
+    if not child or child.therapist_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Copilul nu a fost găsit")
+    
+    for item in items:
+        symbol_id = item.get('symbol_id')
+        new_order = item.get('new_order')
+        if symbol_id and new_order is not None:
+            symbol = db.query(Symbol).filter(
+                Symbol.id == symbol_id,
+                Symbol.child_id == child_id
+            ).first()
+            if symbol:
+                symbol.display_order = new_order
+    
+    db.commit()
+    return {"success": True}
+
+
 # ============ ENDPOINTS PENTRU CATEGORII ============
 
 @app.get("/api/categories", response_model=List[CategoryResponse])
@@ -54,8 +423,12 @@ def get_category(category_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/categories", response_model=CategoryResponse)
 def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
-    """Creează o nouă categorie"""
-    return CategoryService.create(db, category)
+    """Creează o nouă categorie (BLOCAT - nu permite categorii globale)"""
+    # Blochează crearea de categorii globale - doar admin ar trebui să poată face asta
+    raise HTTPException(
+        status_code=403, 
+        detail="Crearea de categorii globale este dezactivată. Folosește endpoint-ul pentru copii."
+    )
 
 
 # ============ ENDPOINTS PENTRU SIMBOLURI ============

@@ -5,12 +5,14 @@ class CategoryGrid extends StatelessWidget {
   final List<Category> categories;
   final Category? selectedCategory;
   final Function(Category?) onCategorySelected;
+  final Function(Category)? onCategoryLongPress;
 
   const CategoryGrid({
     super.key,
     required this.categories,
     this.selectedCategory,
     required this.onCategorySelected,
+    this.onCategoryLongPress,
   });
 
   @override
@@ -47,6 +49,7 @@ class CategoryGrid extends StatelessWidget {
               color: category.colorValue,
               isSelected: selectedCategory?.id == category.id,
               onTap: () => onCategorySelected(category),
+              onLongPress: onCategoryLongPress != null ? () => onCategoryLongPress!(category) : null,
             ),
           );
         },
@@ -60,18 +63,21 @@ class _CategoryCard extends StatelessWidget {
   final Color color;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _CategoryCard({
     required this.name,
     required this.color,
     required this.isSelected,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         width: 100,
         decoration: BoxDecoration(
