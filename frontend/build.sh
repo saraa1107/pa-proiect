@@ -12,6 +12,10 @@ echo "=========================================="
 echo "Starting Flutter Web Build Process"
 echo "=========================================="
 
+# Save the project directory (where pubspec.yaml is located)
+PROJECT_DIR="$PWD"
+echo "📂 Project directory: $PROJECT_DIR"
+
 # Flutter version to install (matches FLUTTER_VERSION in netlify.toml)
 FLUTTER_VERSION="${FLUTTER_VERSION:-3.16.5}"
 FLUTTER_CHANNEL="stable"
@@ -55,8 +59,9 @@ flutter --version
 echo "🏥 Running Flutter doctor..."
 flutter doctor -v
 
-# Return to build directory
-cd "$BUILD_DIR" || cd "$PWD"
+# Return to project directory
+cd "$PROJECT_DIR"
+echo "📂 Returned to project directory: $PWD"
 
 echo "=========================================="
 echo "Building Flutter Web Application"
