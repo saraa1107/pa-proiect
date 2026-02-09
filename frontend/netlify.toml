@@ -15,7 +15,7 @@
 
 [build.environment]
   # Versiune Flutter (instalată de build.sh)
-  FLUTTER_VERSION = "3.16.5"
+  FLUTTER_VERSION = "3.19.0"
   
   # Optimizări build
   DART_DEFINES = "FLUTTER_WEB_USE_SKIA=false"

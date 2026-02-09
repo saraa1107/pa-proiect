@@ -7,6 +7,7 @@
 # then builds the Flutter web application.
 
 set -e  # Exit on any error
+set -x  # Print commands as they execute (for debugging)
 
 echo "=========================================="
 echo "Starting Flutter Web Build Process"
@@ -15,9 +16,18 @@ echo "=========================================="
 # Save the project directory (where pubspec.yaml is located)
 PROJECT_DIR="$PWD"
 echo "📂 Project directory: $PROJECT_DIR"
+echo "📂 Directory contents:"
+ls -la
+
+# Verify pubspec.yaml exists
+if [ ! -f "pubspec.yaml" ]; then
+  echo "❌ ERROR: pubspec.yaml not found in $PROJECT_DIR"
+  exit 1
+fi
+echo "✅ Found pubspec.yaml"
 
 # Flutter version to install (matches FLUTTER_VERSION in netlify.toml)
-FLUTTER_VERSION="${FLUTTER_VERSION:-3.16.5}"
+FLUTTER_VERSION="${FLUTTER_VERSION:-3.19.0}"
 FLUTTER_CHANNEL="stable"
 
 # Installation paths
@@ -28,15 +38,8 @@ FLUTTER_BIN="$FLUTTER_HOME/bin"
 if [ ! -d "$FLUTTER_HOME" ]; then
   echo "📦 Installing Flutter SDK version $FLUTTER_VERSION..."
   
-  # Create flutter directory
-  mkdir -p "$FLUTTER_HOME"
-  
   # Clone Flutter repository
-  git clone https://github.com/flutter/flutter.git -b $FLUTTER_CHANNEL "$FLUTTER_HOME"
-  
-  # Checkout specific version
-  cd "$FLUTTER_HOME"
-  git checkout $FLUTTER_VERSION
+  git clone --depth 1 --branch $FLUTTER_VERSION https://github.com/flutter/flutter.git "$FLUTTER_HOME"
   
   echo "✅ Flutter SDK downloaded successfully"
 else
@@ -45,6 +48,9 @@ fi
 
 # Add Flutter to PATH
 export PATH="$FLUTTER_BIN:$PATH"
+
+# Verify flutter command is available
+which flutter || (echo "❌ Flutter not found in PATH"; exit 1)
 
 # Configure Flutter
 echo "🔧 Configuring Flutter..."
@@ -55,17 +61,21 @@ flutter config --enable-web
 echo "📋 Flutter version information:"
 flutter --version
 
-# Run Flutter doctor to check setup
+# Quick doctor check (non-verbose)
 echo "🏥 Running Flutter doctor..."
-flutter doctor -v
+flutter doctor
 
 # Return to project directory
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR" || (echo "❌ Failed to return to project directory"; exit 1)
 echo "📂 Returned to project directory: $PWD"
 
 echo "=========================================="
 echo "Building Flutter Web Application"
 echo "=========================================="
+
+# Clean previous build
+echo "🧹 Cleaning previous build..."
+flutter clean || echo "No previous build to clean"
 
 # Get dependencies
 echo "📦 Fetching Flutter dependencies..."
@@ -73,7 +83,17 @@ flutter pub get
 
 # Build for web
 echo "🛠️ Building Flutter web app (release mode)..."
-flutter build web --release --web-renderer html
+flutter build web --release
+
+# Verify build output
+if [ -d "build/web" ]; then
+  echo "✅ Build directory created"
+  echo "📦 Build contents:"
+  ls -la build/web/
+else
+  echo "❌ Build failed - no build/web directory created"
+  exit 1
+fi
 
 echo "=========================================="
 echo "✅ Build completed successfully!"
