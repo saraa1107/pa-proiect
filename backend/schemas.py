@@ -10,6 +10,7 @@ class CategoryBase(BaseModel):
     description: Optional[str] = None
     icon: Optional[str] = None
     color: Optional[str] = None
+    child_id: Optional[int] = None  # None = global, int = specific copil
 
 
 class CategoryCreate(CategoryBase):

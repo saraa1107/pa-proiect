@@ -204,7 +204,8 @@ class SymbolService:
         db_symbol = Symbol(**d)
         db.add(db_symbol)
         db.commit()
-        db.refresh(db_symbol)
+        # Skip refresh for faster performance with remote databases
+        # db.refresh(db_symbol)
         return db_symbol
 
     @staticmethod
