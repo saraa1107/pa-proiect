@@ -7,18 +7,14 @@
   # Directory cu build-ul final (Flutter web output)
   publish = "build/web"
   
-  # Comandă de build
-  command = """
-    flutter --version && \
-    flutter pub get && \
-    flutter build web --release --web-renderer html
-  """
+  # Comandă de build (rulează script care instalează Flutter)
+  command = "bash build.sh"
   
   # Base directory (unde se află proiectul Flutter)
   base = "frontend"
 
 [build.environment]
-  # Versiune Flutter (Netlify va instala automat)
+  # Versiune Flutter (instalată de build.sh)
   FLUTTER_VERSION = "3.16.5"
   
   # Optimizări build

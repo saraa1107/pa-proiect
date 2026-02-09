@@ -307,13 +307,16 @@ flutter build web --release \
 
 **Fișier:** `frontend/netlify.toml`
 
+**Important:** Netlify NU instalează Flutter automat. Folosim `build.sh` care descarcă și instalează Flutter SDK în timpul build-ului.
+
 ```toml
 [build]
   publish = "build/web"
-  command = "flutter pub get && flutter build web --release --web-renderer html"
+  command = "bash build.sh"
+  base = "frontend"
 
 [build.environment]
-  FLUTTER_VERSION = "3.16.0"
+  FLUTTER_VERSION = "3.16.5"
 
 [[redirects]]
   from = "/*"

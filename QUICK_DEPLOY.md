@@ -71,8 +71,9 @@ git push -u origin main
 4. **Selectează:** `aac-communication-system`
 5. **Build settings:**
    - Base directory: `frontend`
-   - Build command: `flutter pub get && flutter build web --release`
+   - Build command: `bash build.sh` (scriptul instalează Flutter automat)
    - Publish directory: `frontend/build/web`
+   - Environment variables: `FLUTTER_VERSION = 3.16.5`
 6. **Deploy site**
 
 ### Opțiunea B: Via CLI (Pentru devs)
