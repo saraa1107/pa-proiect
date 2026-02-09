@@ -1262,83 +1262,6 @@ email-validator
 ---
 
 ## 🔧 Scripturi Utilitare Backend
-
-### `upload_images_from_folder.py` (100 linii)
-**Rol:** Upload în masă imagini din folder local
-
-**Ce face:**
-```python
-"""
-1. Scanează folderul data/images/
-2. Pentru fiecare fișier găsit (ex: mama.jpg):
-   - Extrage numele simbolului din nume fișier
-   - Caută simbolul în baza de date
-   - Actualizează symbol.image_url cu calea corectă
-3. Raportează rezultatele
-"""
-
-from pathlib import Path
-from database import SessionLocal
-from models import Symbol
-
-db = SessionLocal()
-
-# Scanează folder
-images_dir = Path("data/images")
-images = list(images_dir.glob("*.jpg")) + list(images_dir.glob("*.png"))
-
-found = 0
-not_found = 0
-updated = 0
-
-for image_path in images:
-    # Ex: "mama.jpg" → "mama"
-    symbol_name = image_path.stem.lower()
-    
-    # Caută simbolul în DB (case-insensitive)
-    symbols = db.query(Symbol).filter(
-        Symbol.name.ilike(f"%{symbol_name}%")
-    ).all()
-    
-    if symbols:
-        for symbol in symbols:
-            # Actualizează image_url
-            symbol.image_url = f"/images/{image_path.name}"
-            found += 1
-            updated += 1
-            print(f"✓ {symbol.name} → {image_path.name}")
-    else:
-        print(f"✗ Nu s-a găsit simbol pentru: {image_path.name}")
-        not_found += 1
-
-db.commit()
-db.close()
-
-print(f"\n📊 Raport:")
-print(f"  - Găsite și actualizate: {updated}")
-print(f"  - Nu s-au găsit simboluri: {not_found}")
-```
-
-**Folosire:**
-```bash
-# 1. Pune imaginile în backend/data/images/
-# Ex: mama.jpg, tata.jpg, fericit.jpg, etc.
-
-# 2. Rulează scriptul
-cd backend
-python upload_images_from_folder.py
-
-# Output:
-# ✓ Mama → mama.jpg
-# ✓ Tata → tata.jpg
-# ✓ Fericit → fericit.jpg
-# ✗ Nu s-a găsit simbol pentru: imagine_random.jpg
-#
-# 📊 Raport:
-#   - Găsite și actualizate: 47
-#   - Nu s-au găsit simboluri: 3
-```
-
 ---
 
 ### `clean_global_category_duplicates.py` (150 linii) 🧹
@@ -1890,141 +1813,472 @@ NOTĂ:
 - După ce adaugi imaginile, rulează din nou: python init_db.py
 ```
 
----
+## 🎨 Partea 2: Fișiere Frontend (Flutter)
 
-### `ANTI_DUPLICATE_PROTECTION.md` (200 linii) 📚
-**Rol:** Documentație protecție duplicate
-
-**Conținut (sumar):**
-```markdown
-# Protecție Anti-Duplicate
-
-## Problema Inițială
-- Categorii se multiplicau la fiecare cleanup
-- Simboluri apareau de 2-3 ori în UI
-- Copii duplicați cu același nume
-
-## Soluții Implementate
-
-### 1. Unique Constraints (Nivel Bază de Date)
-
-```sql
--- Children
-UNIQUE (name, therapist_id)
-
--- Categories
-UNIQUE (name, child_id)
-
--- Symbols
-UNIQUE (name, category_id, child_id)
-```
-
-### 2. Logica Deduplicare (Nivel Aplicație)
-
-#### services.py - CategoryService.get_all_for_child()
-```python
-# Dacă copilul ARE categorii → DOAR acelea
-# Dacă copilul NU ARE categorii → tabla globală
-# NU returnează ambele simultan!
-```
-
-#### services.py - SymbolService.get_all_for_child()
-```python
-# Similar cu categoriile
-# Previne duplicarea vizuală
-```
-
-### 3. Blocări API
-
-```python
-# main.py - POST /api/categories
-@app.post("/api/categories")
-def create_category():
-    raise HTTPException(403, "Creare categorii globale blocată")
-```
-
-### 4. Verificări în ChildService.create()
-```python
-# Verifică copil duplicat înainte de creare
-# Mapează corect category_id la copiere simboluri
-```
-
-## Best Practices
-
-1. ✅ Rulează verify_database_structure.py periodic
-2. ✅ Folosește clean_*_duplicates.py dacă vezi probleme
-3. ✅ NU crea categorii/simboluri globale manual
-4. ✅ Folosește init_db.py pentru resetare completă
-```
+Această secțiune explică DETALIAT toate fișierele Flutter din proiect.
 
 ---
 
-### `MANUAL_IMAGE_UPLOAD.md` (150 linii) 📚
-**Rol:** Ghid upload manual imagini
+### `main.dart` (40 linii) ⭐ ENTRY POINT
+**Rol:** Punct de intrare aplicație Flutter - configurare inițială
 
-**Conținut (sumar):**
-```markdown
-# Manual Upload Imagini
+**Ce face:**
+```dart
+void main() {
+  runApp(const MyApp());
+}
 
-## Metoda 1: Via Script Python
-
-```bash
-# 1. Pune imaginile în backend/data/images/
-cp ~/Downloads/*.jpg backend/data/images/
-
-# 2. Rulează scriptul
-python backend/upload_images_from_folder.py
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      // ⭐ CONFIGURARE STATE MANAGEMENT
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => SymbolProvider()),
+        ChangeNotifierProvider(create: (_) => SentenceProvider()),
+      ],
+      child: MaterialApp(
+        title: 'AAC Communication System',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const ModeSelectionScreen(),
+      ),
+    );
+  }
+}
 ```
 
-## Metoda 2: Via API
+**Providers configurați:**
+1. **AuthProvider** - Gestionare autentificare (login, register, logout)
+2. **CategoryProvider** - Gestionare categorii (încărcare, filtrare)
+3. **SymbolProvider** - Gestionare simboluri (încărcare, căutare)
+4. **SentenceProvider** - Construire propoziții (adăugare, ștergere simboluri)
 
-```python
-import requests
+**Ecran inițial:** `ModeSelectionScreen` - alegere între "Mod Comunicare" (copil) și "Mod Terapeut"
 
-# Upload imagine pentru simbol
-url = "http://localhost:8000/api/symbols/5/upload-image"
-files = {"file": open("mama.jpg", "rb")}
-headers = {"Authorization": "Bearer YOUR_TOKEN"}
+---
 
-response = requests.post(url, files=files, headers=headers)
-print(response.json())
+## 📦 Models (Data Classes)
+
+### `models/child.dart` (30 linii)
+**Rol:** Model pentru profile copii
+
+**Structură:**
+```dart
+class Child {
+  final int id;
+  final int therapistId;
+  final String name;
+  final DateTime createdAt;
+
+  // Serializare JSON → obiect Dart
+  factory Child.fromJson(Map<String, dynamic> json) {
+    return Child(
+      id: json['id'],
+      therapistId: json['therapist_id'],
+      name: json['name'],
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
+
+  // Serializare obiect Dart → JSON
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'therapist_id': therapistId,
+    'name': name,
+    'created_at': createdAt.toIso8601String(),
+  };
+}
 ```
 
-## Metoda 3: Via Frontend
+**Folosire:** Lista copii în dashboard, selecție copil pentru tabla AAC
 
-```
-1. Login ca terapeut
-2. Deschide tabla unui copil
-3. Click pe simbol → "Editează"
-4. "Upload imagine" → Selectează fișier
-5. Salvează
-```
+---
 
-## Format Imagini
+### `models/category.dart` (40 linii)
+**Rol:** Model pentru categorii simboluri
 
-- Formate acceptate: JPG, PNG, GIF
-- Dimensiune recomandată: 200x200px - 512x512px
-- Mărime fișier: max 5MB per imagine
-- Nume fișier: preferabil lowercase, fără spații
+**Câmpuri speciale:**
+- `color` - string hex ("#FF6B6B") → convertit la `Color` via getter `colorValue`
+- `icon` - numele iconului (pentru viitor)
+- `description` - descriere categorie
 
-## Troubleshooting
-
-**Imaginile nu apar în UI:**
-- Verifică că backend-ul servește `/images/` corect
-- Verifică permisiunile folder-ului data/images/
-- Verifică că image_url în DB este corect (/images/nume.jpg)
-
-**Eroare "Image not found":**
-- Verifică că fișierul există fizic în data/images/
-- Verifică că numele fișierului corespunde cu image_url din DB
+**Conversie color:**
+```dart
+Color get colorValue {
+  if (color != null && color!.startsWith('#')) {
+    // #FF6B6B → Color(0xFFFF6B6B)
+    return Color(int.parse(color!.substring(1), radix: 16) + 0xFF000000);
+  }
+  return Colors.blue; // Default
+}
 ```
 
 ---
 
-## 🎨 Fișiere Frontend (va urma în partea 2)
+### `models/symbol.dart` (50 linii) ⭐ MODEL PRINCIPAL
+**Rol:** Model pentru simboluri AAC
 
-Documentația continuă cu fișierele Flutter în fișierul separat...
+**Procesare specială:**
+```dart
+factory Symbol.fromJson(Map<String, dynamic> json) {
+  // ⭐ Conversie URL relative → absolute
+  String imageUrl = json['image_url'] as String;
+  if (imageUrl.startsWith('/')) {
+    // "/images/mama.jpg" → "http://localhost:8000/images/mama.jpg"
+    imageUrl = 'http://localhost:8000$imageUrl';
+  }
+  
+  return Symbol(
+    id: json['id'],
+    name: json['name'],
+    text: json['text'],
+    imageUrl: imageUrl,
+    categoryId: json['category_id'],
+    usageCount: json['usage_count'],
+    createdAt: DateTime.parse(json['created_at']),
+    category: Category.fromJson(json['category']),
+  );
+}
+```
+
+**text vs name:** `name` = afișat în UI, `text` = citit de TTS
 
 ---
 
-**NOTA:** Acest fișier conține explicații DETALIATE pentru fiecare fișier backend. Pentru explicații complete frontend, vezi partea 2 a documentației.
+## 🔄 Providers (State Management)
+
+### `providers/auth_provider.dart` (150 linii) ⭐ AUTENTIFICARE
+**Rol:** Gestionare autentificare și sesiune
+
+**State:**
+```dart
+class AuthProvider extends ChangeNotifier {
+  User? _user;
+  String? _token;
+  bool _isLoading;
+  
+  bool get isAuthenticated => _token != null;
+}
+```
+
+**Login:**
+```dart
+Future<bool> login(String email, String password) async {
+  final response = await ApiService.login(email, password);
+  _token = response['access_token'];
+  _user = User.fromJson(response['user']);
+  
+  // Salvează în SharedPreferences (persistent)
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('auth_token', _token!);
+  // ... (salvează toate datele user)
+  
+  notifyListeners();
+  return true;
+}
+```
+
+**Auto-login:**
+```dart
+AuthProvider() {
+  _loadFromStorage(); // Verifică SharedPreferences la pornire
+}
+```
+
+---
+
+### `providers/sentence_provider.dart` (30 linii) ⭐ CONSTRUIRE PROPOZIȚII
+**Rol:** Gestionare bară propoziții
+
+```dart
+class SentenceProvider extends ChangeNotifier {
+  final List<Symbol> _sentence = [];
+  
+  String get sentenceText => _sentence.map((s) => s.text).join(' ');
+  
+  void addSymbol(Symbol symbol) {
+    _sentence.add(symbol);
+    notifyListeners();
+  }
+  
+  void clear() {
+    _sentence.clear();
+    notifyListeners();
+  }
+}
+```
+
+---
+
+## 🌐 Services
+
+### `services/api_service.dart` (400+ linii) ⭐ API CLIENT
+
+**Endpoint-uri implementate:**
+
+```dart
+// Autentificare
+static Future<Map<String, dynamic>> login(String email, String password)
+static Future<Map<String, dynamic>> register(String name, String email, String password)
+
+// Copii
+static Future<List<Child>> getChildren(String token)
+static Future<Child> createChild(String token, String name)
+static Future<void> deleteChild(String token, int childId)
+
+// Categorii
+static Future<List<Category>> getChildCategories(String token, int childId)
+
+// Simboluri
+static Future<List<Symbol>> getChildSymbols(String token, int childId, {int? categoryId})
+static Future<List<Symbol>> getChildFavorites(String token, int childId)
+static Future<void> addChildFavorite(String token, int childId, int symbolId)
+static Future<void> removeChildFavorite(String token, int childId, int symbolId)
+
+// TTS
+static Future<String> textToSpeech(String text)
+```
+
+**Pattern comun:**
+```dart
+1. Construiește URI
+2. Adaugă headers (Authorization: Bearer token)
+3. Face request HTTP
+4. Verifică status code
+5. Parse JSON → model objects
+6. Throw exception la eroare
+```
+
+---
+
+### `services/tts_service.dart` (75 linii) 🔊 TEXT-TO-SPEECH
+
+**Implementare:**
+```dart
+class TTSService {
+  html.AudioElement? _currentAudio;
+  
+  Future<void> speak(String text) async {
+    await stop(); // Oprește audio curent
+    
+    // Generează audio via backend
+    final audioUrl = await ApiService.textToSpeech(text);
+    
+    // Redă folosind HTML5 Audio
+    _currentAudio = html.AudioElement()
+      ..src = audioUrl
+      ..autoplay = true;
+    
+    await _currentAudio!.play();
+  }
+}
+```
+
+**Flux TTS:**
+```
+User click 🔊 
+→ TTSService.speak(sentenceText) 
+→ ApiService.textToSpeech() 
+→ Backend gTTS generează MP3 
+→ HTML5 Audio redă fișierul
+```
+
+---
+
+## 📱 Screens
+
+### `screens/login_screen.dart` (180 linii) 🔐
+**Rol:** Ecran login/register pentru terapeuți
+
+**UI:** Formular cu email + parolă, toggle login/register
+
+**Logică:**
+```dart
+Future<void> _submit() async {
+  final authProvider = context.read<AuthProvider>();
+  bool success = _isLogin 
+    ? await authProvider.login(email, password)
+    : await authProvider.register(name, email, password);
+  
+  if (success) {
+    Navigator.pushReplacement(context, 
+      MaterialPageRoute(builder: (_) => TherapistDashboardScreen()));
+  }
+}
+```
+
+---
+
+### `screens/child_board_screen.dart` (660 linii) ⭐ TABLA AAC
+
+**Layout:**
+```
+┌─────────────────────────────────────┐
+│ Bară propoziție: [🔊] [🗑️]         │
+├─────────────────────────────────────┤
+│ 🔍 Search                           │
+├─────────────────────────────────────┤
+│ [Toate] [⭐] [Acțiuni] [Alimente]   │
+├─────────────────────────────────────┤
+│ Grid simboluri (3 coloane)          │
+│ ┌─────┐ ┌─────┐ ┌─────┐            │
+│ │ 🖼️ │ │ 🖼️ │ │ 🖼️ │            │
+│ └─────┘ └─────┘ └─────┘            │
+└─────────────────────────────────────┘
+```
+
+**Funcționalități:**
+- Tap simbol → adaugă în propoziție
+- Long press → toggle favorite (⭐)
+- Click categorie → filtrare simboluri
+- Search → filtrare live
+- 🔊 → Text-to-Speech
+- 🗑️ → Clear propoziție
+
+---
+
+### `screens/therapist_dashboard_screen.dart` (300 linii) 👨‍⚕️
+**Rol:** Dashboard terapeut - gestionare copii
+
+**UI:** Grid cu card-uri copii, butoane Deschide/Șterge, buton + Adaugă copil
+
+**Operații:**
+- Încărcare listă copii
+- Creare copil nou (dialog)
+- Ștergere copil (confirmare)
+- Deschidere tablă copil
+
+---
+
+## 🧩 Widgets
+
+### `widgets/sentence_bar.dart` (100 linii) 📝
+**Rol:** Bara de sus cu propoziția construită
+
+**Props:**
+```dart
+final List<Symbol> sentence;
+final Function(int) onRemoveSymbol;
+final VoidCallback onSpeak;
+final VoidCallback onClear;
+```
+
+**UI:** Chips (mini-cards) cu X button, butoane 🔊 și 🗑️
+
+---
+
+### `widgets/symbol_grid.dart` (150 linii) 🖼️
+**Rol:** Grid principal cu simboluri
+
+**Implementare:**
+```dart
+GridView.builder(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 3,
+    crossAxisSpacing: 12,
+    mainAxisSpacing: 12,
+  ),
+  itemBuilder: (context, index) => _SymbolCard(...),
+)
+```
+
+**_SymbolCard:**
+- Imagine (CachedNetworkImage) - 75%
+- Text (nume) - 25%
+- Steluță ⭐ dacă favorite
+- InkWell pentru ripple effect
+
+---
+
+### `widgets/category_grid.dart` (150 linii) 📂
+**Rol:** Grid categorii (scroll orizontal)
+
+**UI:** `[Toate] [⭐] [Acțiuni] [Alimente] [Emoții]`
+
+**Funcționalitate:**
+- Scroll orizontal
+- Highlight categoria selectată
+- Categorii colorate
+
+---
+
+## 🎨 Theme
+
+### `theme/app_theme.dart` (30 linii)
+**Rol:** Temă Material Design 3
+
+```dart
+class AppTheme {
+  static ThemeData get lightTheme {
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+      useMaterial3: true,
+      cardTheme: CardThemeData(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+}
+```
+
+---
+
+## 📦 Dependințe Principale
+
+```yaml
+dependencies:
+  provider: ^6.0.0              # State management
+  http: ^1.1.0                  # HTTP client
+  shared_preferences: ^2.2.0    # Storage persistent
+  cached_network_image: ^3.3.0  # Cache imagini
+  animate_do: ^3.1.2            # Animații
+```
+
+---
+
+## 🔄 Flux Date Complet (Exemplu)
+
+**User construiește propoziție:**
+
+```
+1. Click "Mama" 
+   → SymbolGrid.onTap() 
+   → SentenceProvider.addSymbol(mama)
+   
+2. Click "Vreau" 
+   → SentenceProvider.addSymbol(vreau)
+   
+3. Click "Apă" 
+   → SentenceProvider.addSymbol(apa)
+   
+4. sentenceText = "Mama Vreau să beau Apă"
+
+5. Click 🔊 
+   → TTSService.speak(sentenceText)
+   → ApiService.textToSpeech()
+   → POST /api/tts/speak
+   → Backend gTTS → MP3
+   → HTML5 Audio redă
+   → User aude vocea 🔊
+```
+
+---
+
+## 🎯 Best Practices
+
+✅ **State Management:** Provider pattern  
+✅ **API:** Serviciu centralizat  
+✅ **UI:** Loading/error states  
+✅ **Performance:** Cached images  
+✅ **UX:** Haptic feedback  
+✅ **Code:** Separare responsabilități
+
+---
+
+✅ **DOCUMENTAȚIE COMPLETĂ BACKEND + FRONTEND**

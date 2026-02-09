@@ -1,13 +1,42 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' hide Category; // pentru kReleaseMode, dar exclude Category din Flutter
 import 'package:http/http.dart' as http;
 import '../models/category.dart';
 import '../models/symbol.dart';
 import '../models/child.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000/api';
-  static const String backendUrl = 'http://localhost:8000';
+  // 🌐 AUTO-DETECT ENVIRONMENT (Production vs Development)
+  // În production (deployed), folosește URL-ul live
+  // În development (local), folosește localhost
+  static String get baseUrl {
+    if (kReleaseMode) {
+      // PRODUCTION - Schimbă cu URL-ul tău de pe Render
+      return 'https://aac-backend.onrender.com/api';
+    } else {
+      // DEVELOPMENT - Local
+      return 'http://localhost:8000/api';
+    }
+  }
+  
+  static String get backendUrl {
+    if (kReleaseMode) {
+      // PRODUCTION
+      return 'https://aac-backend.onrender.com';
+    } else {
+      // DEVELOPMENT
+      return 'http://localhost:8000';
+    }
+  }
+  
+  // Debug helper
+  static void printEnvironment() {
+    print('🌐 API Environment:');
+    print('   Mode: ${kReleaseMode ? "PRODUCTION" : "DEVELOPMENT"}');
+    print('   Base URL: $baseUrl');
+    print('   Backend: $backendUrl');
+  }
 
   // ============ AUTENTIFICARE ============
   static Future<Map<String, dynamic>> login(String email, String password) async {

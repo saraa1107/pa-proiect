@@ -1,0 +1,62 @@
+# ==============================================
+# RENDER BLUEPRINT CONFIGURATION
+# ==============================================
+# Deployment configuration pentru Render.com
+# Documentație: https://render.com/docs/blueprint-spec
+
+services:
+  # ==============================================
+  # Backend API Service (FastAPI)
+  # ==============================================
+  - type: web
+    name: aac-backend
+    env: python
+    region: oregon  # sau frankfurt (Europe)
+    plan: free      # free, starter ($7/mo), standard ($25/mo)
+    
+    # Build commands
+    buildCommand: |
+      cd backend
+      pip install --upgrade pip
+      pip install -r requirements_production.txt
+    
+    # Start command
+    startCommand: |
+      cd backend
+      python init_db.py
+      uvicorn main:app --host 0.0.0.0 --port $PORT
+    
+    # Health check
+    healthCheckPath: /docs
+    
+    # Environment variables
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      
+      - key: SECRET_KEY
+        generateValue: true  # Render generează automat
+      
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aac-database
+          property: connectionString
+      
+      - key: ALLOWED_ORIGINS
+        value: https://aac-communication.netlify.app,http://localhost:3000
+      
+      - key: ENVIRONMENT
+        value: production
+
+# ==============================================
+# PostgreSQL Database
+# ==============================================
+databases:
+  - name: aac-database
+    databaseName: aac_db
+    user: aac_user
+    plan: free  # free (90 zile), starter ($7/mo)
+    region: oregon
+    
+    # Backup (doar pe paid plans)
+    # ipAllowList: []  # Empty = public access

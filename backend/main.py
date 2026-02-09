@@ -7,6 +7,13 @@ import uvicorn
 import os
 import shutil
 
+try:
+    from decouple import config
+except ImportError:
+    # Fallback pentru dev local
+    def config(key, default=None):
+        return os.getenv(key, default)
+
 from database import SessionLocal, engine, Base
 from models import Category, Symbol, User, Child
 from schemas import (CategoryCreate, CategoryResponse, SymbolCreate, SymbolResponse, 
@@ -17,12 +24,30 @@ from services import CategoryService, SymbolService, UserService, TTSService, Ch
 # Creează tabelele în baza de date
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="AAC Communication System API", version="1.0.0")
+app = FastAPI(
+    title="AAC Communication System API",
+    version="1.0.0",
+    description="API pentru sistem de comunicare AAC (Augmentative and Alternative Communication)"
+)
 
-# Configurează CORS pentru a permite conexiuni din Flutter
+# Environment variables
+SECRET_KEY = config('SECRET_KEY', default='dev-secret-key-CHANGE-IN-PRODUCTION')
+ALLOWED_ORIGINS_STR = config('ALLOWED_ORIGINS', default='http://localhost:*,http://localhost:3000,http://localhost:8000')
+ENVIRONMENT = config('ENVIRONMENT', default='development')
+
+# Parse ALLOWED_ORIGINS
+if ALLOWED_ORIGINS_STR == '*' or ALLOWED_ORIGINS_STR == 'http://localhost:*':
+    ALLOWED_ORIGINS = ["*"]
+else:
+    ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(',')]
+
+print(f"🌍 Environment: {ENVIRONMENT}")
+print(f"🔒 CORS Origins: {ALLOWED_ORIGINS}")
+
+# Configurează CORS pentru a permite conexiuni din Flutter Web
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # În producție, specifică domeniul exact
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
