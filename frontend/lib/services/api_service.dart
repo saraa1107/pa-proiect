@@ -13,7 +13,7 @@ class ApiService {
   static String get baseUrl {
     if (kReleaseMode) {
       // PRODUCTION - Schimbă cu URL-ul tău de pe Render
-      return 'https://aac-backend.onrender.com/api';
+      return 'https://aac-app-backend.onrender.com/api';
     } else {
       // DEVELOPMENT - Local
       return 'http://localhost:8000/api';
@@ -23,7 +23,7 @@ class ApiService {
   static String get backendUrl {
     if (kReleaseMode) {
       // PRODUCTION
-      return 'https://aac-backend.onrender.com';
+      return 'https://aac-app-backend.onrender.com';
     } else {
       // DEVELOPMENT
       return 'http://localhost:8000';
