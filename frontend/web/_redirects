@@ -1,0 +1,5 @@
+/flutter_bootstrap.js  /flutter_bootstrap.js  200
+/main.dart.js         /main.dart.js         200
+/assets/*             /assets/:splat        200
+/icons/*              /icons/:splat         200
+/*                    /index.html           200
