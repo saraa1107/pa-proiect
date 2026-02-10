@@ -5,7 +5,7 @@
   publish = "frontend/build/web"
 
 [build.environment]
-  FLUTTER_VERSION = "3.19.0"
+  FLUTTER_VERSION = "3.38.4"
   DART_DEFINES = "FLUTTER_WEB_USE_SKIA=false"
 
 # SPA fallback
