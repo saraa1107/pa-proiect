@@ -25,6 +25,26 @@
 # ==============================================
 # Single Page Application - toate rutele → index.html
 [[redirects]]
+  from = "/flutter_bootstrap.js"
+  to = "/flutter_bootstrap.js"
+  status = 200
+
+[[redirects]]
+  from = "/main.dart.js"
+  to = "/main.dart.js"
+  status = 200
+
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/icons/*"
+  to = "/icons/:splat"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
