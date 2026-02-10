@@ -90,6 +90,13 @@ if [ -d "build/web" ]; then
   echo "✅ Build directory created"
   echo "📦 Build contents:"
   ls -la build/web/
+  # Ensure Netlify redirects file is present in build output
+  if [ -f "web/_redirects" ]; then
+    cp web/_redirects build/web/_redirects
+    echo "✅ Copied web/_redirects to build/web/_redirects"
+  else
+    echo "⚠️ web/_redirects not found; Netlify may rewrite JS requests"
+  fi
 else
   echo "❌ Build failed - no build/web directory created"
   exit 1
