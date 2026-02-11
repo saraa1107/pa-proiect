@@ -1,4 +1,5 @@
 import 'category.dart';
+import '../services/api_service.dart';
 
 class Symbol {
   final int id;
@@ -26,7 +27,7 @@ class Symbol {
     String imageUrl = json['image_url'] as String;
     if (imageUrl.startsWith('/')) {
       // Dacă este un path relativ, adaugă base URL-ul backend-ului
-      imageUrl = 'http://localhost:8000$imageUrl';
+      imageUrl = '${ApiService.backendUrl}$imageUrl';
     }
     
     return Symbol(

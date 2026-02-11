@@ -429,7 +429,7 @@ class ApiService {
         if (audioUrl.startsWith('http')) {
           return audioUrl;
         }
-        return 'http://localhost:8000$audioUrl';
+        return '$backendUrl$audioUrl';
       } else {
         throw Exception('Eroare la generarea vorbirii');
       }
